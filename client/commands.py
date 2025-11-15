@@ -59,7 +59,7 @@ class commandHandler:
             },
             "/topic": {
                 "function": self.set_new_topic,
-                "usage": "/ping",
+                "usage": "/topic <room> <new topic>",
                 "needs_whole": True
             },
             "/nick": {
@@ -143,12 +143,12 @@ class commandHandler:
 
     def reply_last(self, whole):
         if not self.last_user_dm:
-            self.parent.safe_print("[OwnSock]", "You have no open DMs.")
+            self.parent.safe_print(message="You have no open DMs.")
             return
         try:
             message = " ".join(whole.split(" ")[1:])
             if not message:
-                self.parent.safe_print("[OwnSock]", "/reply <your message>")
+                self.parent.safe_print(message="/reply <your message>")
                 return
             self.other = self.last_user_dm
             self.command = "MESSAGE_USER"
@@ -232,7 +232,7 @@ class commandHandler:
 
     def disconnect_from_server(self):
         try:
-            self.command = "DISCONNECT"
+            self.command = "CLIENT_DISCONNECT"
             self.send()
         except:
             self.parent.safe_print("[OwnSock]", "Server is probably already closed.")
@@ -252,7 +252,7 @@ class commandHandler:
     
     
     def get_list_room(self):
-        self.command = "LIST_ROOM"
+        self.command = "GET_LIST_ROOM"
         self.send()
         return
 

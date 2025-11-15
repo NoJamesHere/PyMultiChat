@@ -6,9 +6,8 @@ if TYPE_CHECKING:
     from connection_handling import user_connection
 
 class handler:
-    def __init__(self, main: "everything"):    
-        if not isinstance(main, main.__class__):
-            raise TypeError(f"args: 'main' = main.everything. Received: {type(main)}.")
+    def __init__(self, main):    
+        
         self.cnh: user_connection | None = None
         
         self.parent = main
@@ -66,6 +65,12 @@ class handler:
                 "usage": "/ping",
                 "description": "Get a ping from the server.",
                 "needs_whole": False
+            },
+            "GET_LIST_HELP": {
+                "function": self.send_help_list,
+                "usage": "/help",
+                "description": "Get a list of all valid commands",
+                "needs_whole": False
             }
         }
 
@@ -92,7 +97,11 @@ class handler:
     
     # /rooms
     def list_rooms(self):
-        pass
+        self.parent.debugprint("Inside list_rooms()")
+        room_string = "Rooms:\n"
+        for room, topic in self.parent.rooms.items():
+            room_string += f"{room}: {topic}\n"
+        self.sock_handler.sock.sendall(room_string.encode())
 
     
     # /ping
@@ -166,13 +175,16 @@ class handler:
         help_string = "All commands:\n"
         for _, entry in self.all_commands.items():
             if(entry.get("description")):
-                help_string += f"{entry.get("")} : {entry['description']}\n"
+                help_string += f"{entry.get("usage")} : {entry['description']}\n"
         self.sock_handler.sock.sendall(f"[Server]: {help_string}".encode())
 
     def give(self, whole : dict):
         if not isinstance(whole, dict):
             raise TypeError("Gave an argument that isn't a dict.")
+
         cmd = whole.get("command")
+        self.parent.debugprint("Inside give()")
+
         if not cmd in self.all_commands:
             return f"{cmd} is not a valid command."
 

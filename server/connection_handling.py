@@ -74,6 +74,7 @@ class user_connection: # This class is used for every connection.
                 if not data:
                     self.disconnect_current_client()
                     break
+                self.parent.debugprint(data)
                 message = json.loads(data)
                 if message["command"]:
                     self.update_values(message)
