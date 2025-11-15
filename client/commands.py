@@ -82,6 +82,11 @@ class commandHandler:
                 "usage": "/join <room>",
                 "needs_whole": True
             },
+            "/create": {
+                "function": self.create_room,
+                "usage": "/create <room name>",
+                "needs_whole": True
+            },
             "/reply": {
                 "function": self.reply_last,
                 "usage": "/reply <message>",
@@ -167,9 +172,8 @@ class commandHandler:
                 if joined:
                     self.room = room_name
                     return True
-                return False
             except queue.Empty:
-                self.parent.safe_print("[OwnSock]: Server failed to confirm information.")
+                self.parent.safe_print(message="Server failed to confirm information.")
                 return False
 
 
@@ -179,11 +183,16 @@ class commandHandler:
             if not self.con_handler.check_room(room_name):
                 self.parent.safe_print("[Server]", "Room does not exist.")
                 return
+            self.parent.safe_print(message="ROOM EXISTS!")
             self.command = "JOIN_ROOM"
             self.other = room_name
             self.send()
-            self.process_queue_for_room(room_name)
-            return
+            if not self.process_queue_for_room(room_name):
+                self.parent.safe_print(message="Server failed to confirm information")
+                return
+            self.room = room_name
+            
+                
         except IndexError:
             return self.all_command_dict[whole.split(" ")[0]]["usage"]
     
@@ -239,8 +248,9 @@ class commandHandler:
             pass
         self.reset_everything()
         self.running = False
-        self.sock.close()
-
+        try:
+            self.sock.close()
+        except: pass
 
     def reset_extra_things(self, message_too = False):
         if not isinstance(message_too, bool):
@@ -281,7 +291,7 @@ class commandHandler:
         return
     
 
-    def give(self, whole):
+    def give(self, whole : str):
         if not isinstance(whole, str):
             raise TypeError("Gave an argument that isn't a string.")
         cmd = whole.split(" ")[0]

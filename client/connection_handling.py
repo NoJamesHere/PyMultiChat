@@ -44,7 +44,7 @@ class handler:
                     message_of_data = data[len("[Server]: "):]
                     self.parent.safe_print("[Server]", message_of_data)
                 else:
-                    message_of_data = data[index_2 +1:].lstrip()
+                    message_of_data = data[index_2 + 3:].lstrip()
                     self.parent.safe_print(sender_and_room, message_of_data)
 
             except socket.timeout:
@@ -56,12 +56,13 @@ class handler:
 
     def check_room(self, room_name):
         self.cmd_handler.command = "ROOM_EXIST"
-        self.cmd_handler.message = room_name
+        self.cmd_handler.other = room_name
         self.cmd_handler.send()
         while True:
             try:
                 info_string = self.info_string_queue.get(timeout=3)
-                return info_string == "INFO: ROOM_EXIST_TRUE"
+                if info_string.startswith("INFO: ROOM_EXIST_"):
+                    return info_string == "INFO: ROOM_EXIST_TRUE"
             except queue.Empty:
                 self.parent.safe_print("[OwnSock]", "Server timed out on room check.")
                 continue

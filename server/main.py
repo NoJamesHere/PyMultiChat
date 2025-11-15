@@ -12,7 +12,7 @@ class everything:
         self.sock.listen()
         self.running = True
         self.all_clients = [] # all 'connection_handling.user_connection' belong here
-        self.rooms = {"lobby": "Welcome to the lobby!",}
+        self.rooms = {"lobby": "Welcome to the lobby!", "custom": "Default."}
     
 
     def debugprint(self, message : str):

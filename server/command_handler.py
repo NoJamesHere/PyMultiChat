@@ -114,14 +114,17 @@ class handler:
     # /join
     def join_room(self, whole : dict):
         room_name = whole["other"] 
-        if self.room_exists(room_name):
-            pass
+        if not self.room_exists(whole):
+            self.sock_handler.sock.sendall("INFO: DIDNOTJOINROOMLOL".encode())
+            return
+        self.sock_handler.room = room_name
+        self.sock_handler.sock.sendall("INFO: JOINED_ROOM".encode())
 
     
     # /create
     def create_room(self, whole : dict):
-            if self.room_exists(whole["other"]):
-                self.parent.sock.sendall(f"[Server]: Room already exists.".encode())
+            if self.room_exists(whole):
+                self.sock_handler.sock.sendall(f"[Server]: Room already exists.".encode())
                 return
             self.parent.rooms[whole["other"]] = "Default topic."
             self.join_room(whole)
@@ -130,6 +133,7 @@ class handler:
     # N-EUD, server side
     def room_exists(self, whole : dict) -> bool :
         for room,_ in self.parent.rooms.items():
+            print(room, whole["other"])
             if room == whole["other"]:
                 return True
         return False
@@ -138,7 +142,7 @@ class handler:
     # N-EUD
     def send_info_if_room_exists(self, whole : dict):
         confirmation = "INFO: ROOM_EXIST_TRUE" if self.room_exists(whole) else "INFO: ROOM_EXIST_FALSE"
-        self.parent.sock.sendall(confirmation.encode())
+        self.sock_handler.sock.sendall(confirmation.encode())
     
     
     # /msg
@@ -160,7 +164,7 @@ class handler:
 
 
     # /topic
-    def set_topic(self, whole : dict):
+    def set_topic(self, whole : dict): # this is broken !
         if not (self.room_exists(whole["other"])):
             self.sock_handler.sock.sendall(f"[Server]: Room does not exist.".encode())
 
@@ -186,7 +190,7 @@ class handler:
         self.parent.debugprint("Inside give()")
 
         if not cmd in self.all_commands:
-            return f"{cmd} is not a valid command."
+            return f"That is not a valid command."
 
         entry = self.all_commands[cmd]
         func = entry["function"]

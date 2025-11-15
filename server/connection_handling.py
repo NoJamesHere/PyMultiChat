@@ -78,7 +78,9 @@ class user_connection: # This class is used for every connection.
                 message = json.loads(data)
                 if message["command"]:
                     self.update_values(message)
-                    self.command_handler.give(message)
+                    reply = self.command_handler.give(message)
+                    if reply:
+                        self.sock.sendall(f"[Server]: {reply}".encode())
                     continue
                 line = message["message"]
                 user_room = message["room"]
