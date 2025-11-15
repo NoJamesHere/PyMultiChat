@@ -36,7 +36,7 @@ class handler:
                 
                 # Update last_user_dm for /reply
                 if data.startswith("(DM") and index_1 != -1 and index_2 != -1:
-                    self.last_user_dm = data[index_1 + 1:index_2]
+                    self.cmd_handler.last_user_dm = data[index_1 + 1:index_2]
 
                 sender_and_room = data[:index_2 + 1]
 

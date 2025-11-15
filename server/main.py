@@ -5,18 +5,18 @@ from connection_handling import user_connection
 from command_handler import handler
 
 class everything:
-    def __init__(self):
+    def __init__(self, ip_address : str, port : int):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(("0.0.0.0", 9999))
+        self.sock.bind((ip_address, port))
+        self.debugprint(f"Server has binded to {ip_address}:{port}.")
         self.sock.settimeout(5.0)
         self.sock.listen()
         self.running = True
         self.all_clients = [] # all 'connection_handling.user_connection' belong here
-        self.rooms = {"lobby": "Welcome to the lobby!", "custom": "Default."}
-    
+        self.rooms = {"lobby": "Welcome to the lobby!"} 
 
     def debugprint(self, message : str):
-        print(message)
+        print("Debug:", message)
         return
 
 
@@ -33,13 +33,15 @@ class everything:
             except socket.timeout:
                 continue
             except KeyboardInterrupt:
-                pass
+                self.debugprint("Trying to shutdown properly.")
+                self.running = False
 
 
     def start(self):
+        self.debugprint("Server is starting to listen.")
         threading.Thread(target=self.listen_constantly, daemon=True).start()
 
-server = everything()
+server = everything("0.0.0.0", 9999)
 server.start()
 
 try:

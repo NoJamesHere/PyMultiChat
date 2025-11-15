@@ -268,7 +268,7 @@ class commandHandler:
 
 
     def get_list_user(self):
-        self.command = "LIST_USER"
+        self.command = "GET_LIST_USER"
         self.send()
         return
 
@@ -282,12 +282,13 @@ class commandHandler:
     
     def set_new_nick(self, whole):
         self.reset_extra_things(True)
-        self.command = "NEW_NICK"
+        self.command = "SET_NEW_NICK"
         try:
             self.other = whole.split(" ")[1]
         except IndexError:
             return self.all_command_dict["/nick"]["usage"]
         self.send()
+        self.username = self.other
         return
     
 
@@ -297,7 +298,7 @@ class commandHandler:
         cmd = whole.split(" ")[0]
         if not cmd in self.all_command_dict:
             return f"{cmd} is not a valid command."
-
+        self.reset_extra_things()
         entry = self.all_command_dict[cmd]
         func = entry["function"]
         if entry.get("needs_whole", False):
