@@ -30,7 +30,7 @@ class everything:
 
                 try:
                     self.safe_print("[OwnSock]", "/connect <ip> <port>")
-                    cmd = self.promptses.prompt("[OwnSock]: ")
+                    cmd = self.promptses.prompt(HTML("<b>[OwnSock]: </b>"))
                     split_cmd = cmd.split(" ")
                     _, ip, port, *_ = split_cmd + [None, None]  # pad with None
                     if not port:
@@ -54,27 +54,33 @@ class everything:
 
     def input_loop(self):
         while self.running:
-            with patch_stdout():
-                current_message = self.promptses.prompt("[You]: ")
-                if current_message.startswith("/"):
-                    reply = self.command_handler.give(current_message)
-                    if reply:
-                        print(reply)
-                    continue
-                elif current_message.strip() == "":
-                    self.safe_print(message="No empty messages allowed.")
-                    continue
-                if not self.command_handler.room:
-                    self.safe_print(message="You haven't joined a room et. /join <room name> or /create <room>")
-                    continue
-                self.command_handler.message = current_message
-                self.command_handler.command = None
-                self.command_handler.send()
+            try:
+                with patch_stdout():
+                    current_message = self.promptses.prompt(HTML("<b>[You]: </b>"))
+                    if current_message.startswith("/"):
+                        reply = self.command_handler.give(current_message)
+                        if reply:
+                            print(reply)
+                        continue
+                    elif current_message.strip() == "":
+                        self.safe_print(message="No empty messages allowed.")
+                        continue
+                    if not self.command_handler.room:
+                        self.safe_print(message="You haven't joined a room et. /join <room name> or /create <room>")
+                        continue
+                    self.command_handler.message = current_message
+                    self.command_handler.command = None
+                    self.command_handler.send()
+            except KeyboardInterrupt:
+                self.safe_print(message="Disconnecting you..")
+                self.command_handler.disconnect_from_server()
+                self.running = False
+                break
 
     def run(self):
         self.connect_to_a_server()
         with patch_stdout():
-            username = self.promptses.prompt("Username: ").strip()
+            username = self.promptses.prompt(HTML("<b>Username: </b>")).strip()
         self.command_handler = commandHandler(self, username, "lobby", self.sock)
         self.connection_handler = handler(self.sock, self.command_handler, self)
         self.command_handler.cnh = self.connection_handler
@@ -98,7 +104,7 @@ class everything:
 ALL_HANDLE = everything()
 ALL_HANDLE.run()
 
-while True:
+while ALL_HANDLE.running:
     try:
         pass
     except KeyboardInterrupt:

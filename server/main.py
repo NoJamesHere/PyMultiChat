@@ -14,7 +14,18 @@ class everything:
         self.running = True
         self.all_clients = [] # all 'connection_handling.user_connection' belong here
         self.rooms = {"lobby": "Welcome to the lobby!"} 
-
+    def shutdown(self):
+        self.debugprint("Shutting down..")
+        for client in self.all_clients:
+            try:
+                client.sock.sendall("[Server]: Server is shutting down!".encode())
+                client.sock.close()
+            except Exception as e: self.debugprint(str(e))
+        try:
+            self.sock.close()
+        except Exception as e:
+            self.debugprint(str(e))
+        self.running = False
     def debugprint(self, message : str):
         print("Debug:", message)
         return
@@ -32,9 +43,6 @@ class everything:
                 self.debugprint("new connection")
             except socket.timeout:
                 continue
-            except KeyboardInterrupt:
-                self.debugprint("Trying to shutdown properly.")
-                self.running = False
 
 
     def start(self):
@@ -48,4 +56,6 @@ try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
-    pass # Do a server shutdown here
+    server.debugprint("Trying to shutdown properly.")
+
+    server.shutdown()

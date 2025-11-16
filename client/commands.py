@@ -247,7 +247,7 @@ class commandHandler:
             self.parent.safe_print("[OwnSock]", "Server is probably already closed.")
             pass
         self.reset_everything()
-        self.running = False
+        self.parent.running = False
         try:
             self.sock.close()
         except: pass

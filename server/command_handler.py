@@ -75,14 +75,8 @@ class handler:
             "GET_LIST_USER": {
                 "function": self.send_user_list,
                 "usage": "/users",
-                "description": "Get a list of all users",
+                "description": "Get a list of all connected users",
                 "needs_whole": False
-            },
-            "SET_NEW_NICK": {
-                "function": self.set_nickname,
-                "usage": "/nick <new nickname>",
-                "description": "Set a new nickname",
-                "needs_whole": True
             }
         }
 
@@ -93,37 +87,29 @@ class handler:
             raise RuntimeError("sock_handler not set")
         return self.cnh
 
-   
-    def send_user_list(self):
-        returned_list = "[Server]: Users:\n"
-        for user in self.parent.all_clients:
-            returned_list += f"{user.username}\n" if user.username != self.sock_handler.username else f"{user.username} (you)"
-        self.sock_handler.sock.sendall(returned_list.encode())
+    
     # N-EUD
     def register_username(self, whole : dict):
         self.sock_handler.username = whole["username"]
         self.sock_handler.broadcast(f"[Server]: {self.sock_handler.username} has joined", self.sock_handler.sock)
         return
-
+    
+    def send_user_list(self):
+        allusers = "[Server]: Users:\n"
+        for client in self.parent.all_clients:
+            allusers += f"{client.username} : {client.room}\n"
+        self.sock_handler.sock.sendall(allusers.encode())
 
     # /disconnect
     def disconnect(self):
         self.sock_handler.disconnect_current_client()
         return
-    
-    def set_nickname(self, whole : dict):
-        old_username = self.sock_handler.username
-        new_username = whole["other"]
-        if not new_username:
-            self.sock_handler.sock.sendall(f"[Server]: /nick <new nickname>".encode())
-            return
-        self.sock_handler.username = new_username 
-        self.sock_handler.broadcast(f"[Server]: {old_username} has changed their nickname to '{new_username}'.", self.sock_handler.sock)
+
     
     # /rooms
     def list_rooms(self):
         self.parent.debugprint("Inside list_rooms()")
-        room_string = "Rooms:\n"
+        room_string = "[Server]: Rooms:\n"
         for room, topic in self.parent.rooms.items():
             room_string += f"{room}: {topic}\n"
         self.sock_handler.sock.sendall(room_string.encode())
@@ -135,17 +121,15 @@ class handler:
         return
 
 
-    # join and create room need to broadcast to the old / new room that the server has left / joined (respectively)
+    # pls join_room and create_room
     # /join
     def join_room(self, whole : dict):
-        room_name = whole["other"]
+        room_name = whole["other"] 
         if not self.room_exists(whole):
             self.sock_handler.sock.sendall("INFO: DIDNOTJOINROOMLOL".encode())
             return
-        self.sock_handler.broadcast(f"[Server]: {self.sock_handler.username} has left the room.", self.sock_handler.sock)
         self.sock_handler.room = room_name
         self.sock_handler.sock.sendall("INFO: JOINED_ROOM".encode())
-        self.sock_handler.broadcast(f"[Server]: {self.sock_handler.username} has joined the room.", self.sock_handler.sock)
 
     
     # /create
@@ -191,8 +175,7 @@ class handler:
 
 
     # /topic
-    def set_topic(self, whole : dict): 
-        self.parent.debugprint("Inside set_topic()")
+    def set_topic(self, whole : dict): # this is broken !
         if not (self.room_exists(whole)):
             self.sock_handler.sock.sendall(f"[Server]: Room does not exist.".encode())
 
@@ -200,7 +183,7 @@ class handler:
         if(whole["extra"]):
             self.parent.rooms[whole["other"]] = whole["extra"]
             self.sock_handler.sock.sendall(f"[Server]: Set {whole['other']}'s topic to:\n{whole['extra']}".encode())
-            
+ 
 
     # /help
     def send_help_list(self):
@@ -210,10 +193,8 @@ class handler:
                 help_string += f"{entry.get("usage")} : {entry['description']}\n"
         self.sock_handler.sock.sendall(f"[Server]: {help_string}".encode())
 
-    def give(self, whole : dict):
-        if not isinstance(whole, dict):
-            raise TypeError("Gave an argument that isn't a dict.")
 
+    def give(self, whole : dict):
         cmd = whole.get("command")
         self.parent.debugprint("Inside give()")
 

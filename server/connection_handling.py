@@ -10,26 +10,20 @@ class user_connection: # This class is used for every connection.
         self.room = None
         self.parent = main
         self.command_handler = cmd
-
+        self.running = True
     def disconnect_current_client(self):
         disconnect_message = f"[Server]: {self.username} has disconnected."
 
-        for client in list(self.parent.all_clients):
-            try:
-                if(client.room == self.room):
-                    client.sock.sendall(disconnect_message.encode())
-            except:
-                self.parent.all_clients.pop(self, None)
+        self.broadcast(disconnect_message, self.sock)
+        
         try:
-            self.parent.sock.close()
+            self.sock.close()
         except:
             pass
 
-        self.parent.running = False
         if(self in self.parent.all_clients):
-            self.parent.all_clients.pop(self, None)
-            
-        
+            self.parent.all_clients.remove(self)
+
 
     def broadcast(self, message: str, sender=None):
         if sender and not isinstance(sender, socket.socket):
@@ -46,7 +40,7 @@ class user_connection: # This class is used for every connection.
 
         for client in list(self.parent.all_clients):
             try:
-                if sender is not None:
+                if sender:
                     if client.sock == sender or client.room != sender_room:
                         continue
                 client.sock.sendall(message.encode())
@@ -68,7 +62,7 @@ class user_connection: # This class is used for every connection.
 
 
     def listener(self):
-        while self.parent.running:
+        while self.running and self.parent.running:
             try:
                 data = self.sock.recv(5012).decode()
                 if not data:
@@ -91,5 +85,7 @@ class user_connection: # This class is used for every connection.
                 self.broadcast(formatted, sender=self.sock)
 
             except Exception as e:
-                self.parent.debugprint(f"connection_handling.listener: {e}")
-                continue
+                self.parent.debugprint(f"{self.username} has disconnected. {e}")
+                self.disconnect_current_client()
+                self.running = False
+                break
