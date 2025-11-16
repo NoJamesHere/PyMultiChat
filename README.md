@@ -14,7 +14,8 @@ List of implementation ideas:
 ## Rooms
 You can create rooms in two ways:
 - **Default:** In the server's main script you can add default rooms that are always available.
-- **Runtime:** A user is able to create a room using `/create <room>`. Note that the user will instantly be moved to it upon creation.
+- **Runtime:** A user is able to create a room using `/create <room>` and will join it upon creation.
+
 Users can switch rooms using `/join <room>`
 
 
