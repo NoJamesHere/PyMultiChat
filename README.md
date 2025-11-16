@@ -2,7 +2,7 @@ Currently I try to rewrite and split a few scripts to be more organized.
 
 This is my first actual attempt at implementing classes inside a python project.
 
-## Important Note: This repository is currently still WIP (Work-In-Progress). Please consider that this will be very unstable at runtime and might hold potential security risks and threats.
+## Important Note: This repository is currently still WIP (Work-In-Progress). Please consider that this might be very unstable at runtime and might hold potential security risks.
 
 List of implementation ideas:
 - Rooms + Topics ✔
