@@ -77,6 +77,12 @@ class handler:
                 "usage": "/users",
                 "description": "Get a list of all connected users",
                 "needs_whole": False
+            },
+            "SET_NEW_NICK": {
+                "function": self.change_nickname,
+                "usage": "/nick <username>",
+                "description": "Change your username.",
+                "needs_whole": True
             }
         }
 
@@ -88,6 +94,14 @@ class handler:
         return self.cnh
 
     
+    def change_nickname(self, whole : dict):
+        old_username = self.sock_handler.username
+        new_username = whole["other"]
+        self.sock_handler.broadcast(f"[Server]: {old_username} has changed their nick to {new_username}", self.sock_handler.sock)
+        self.sock_handler.sock.sendall(f"[Server]: You have changed your username to {new_username}.".encode())
+        self.sock_handler.username = new_username
+
+
     # N-EUD
     def register_username(self, whole : dict):
         self.sock_handler.username = whole["username"]
