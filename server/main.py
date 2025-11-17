@@ -13,6 +13,7 @@ class everything:
         self.sock.listen()
         self.running = True
         self.all_clients = [] # all 'connection_handling.user_connection' belong here
+        self.all_bots = []
         self.rooms = {"lobby": "Welcome to the lobby!"} 
     def shutdown(self):
         self.debugprint("Shutting down..")

@@ -35,7 +35,7 @@ class user_connection: # This class is used for every connection.
                 if client.sock == sender:
                     sender_room = client.room
                     break
-
+        
         disconnected = []
 
         for client in list(self.parent.all_clients):
@@ -70,12 +70,23 @@ class user_connection: # This class is used for every connection.
                     break
                 self.parent.debugprint(data)
                 message = json.loads(data)
+                self.parent.debugprint(message="1")
                 if message["command"]:
                     self.update_values(message)
                     reply = self.command_handler.give(message)
                     if reply:
                         self.sock.sendall(f"[Server]: {reply}".encode())
                     continue
+                self.parent.debugprint(message="2")
+                for bot in self.parent.all_bots:
+                    try:
+                        bot.sock.sendall(message.encode())
+                        continue
+                    except:
+                        if bot in self.parent.all_bots:
+                            self.parent.all_bots.remove(bot)
+                        break
+                self.parent.debugprint(message="3")
                 line = message["message"]
                 user_room = message["room"]
                 username = message["username"]

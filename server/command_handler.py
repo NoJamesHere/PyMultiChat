@@ -83,6 +83,18 @@ class handler:
                 "usage": "/nick <username>",
                 "description": "Change your username.",
                 "needs_whole": True
+            },
+            "I_AM_A_BOT": {
+                "function": self.register_bot,
+                "usage": None,
+                "description": None, 
+                "needs_whole": False
+            }, 
+            "SEND_URL_TITLE": {
+                "function": self.broadcast_url_title,
+                "usage": None,
+                "description": None,
+                "needs_whole": True
             }
         }
 
@@ -94,6 +106,21 @@ class handler:
         return self.cnh
 
     
+    def broadcast_url_title(self, whole : dict):
+        room_of_sender = whole["other"]
+        url_message = whole["extra"]
+
+        for user in self.parent.all_clients:
+            if user.username == room_of_sender:
+                self.sock_handler.broadcast(url_message, user)
+                user.sock_handler.sock.sendall(url_message.encode())
+                break
+
+
+    def register_bot(self):
+        self.parent.all_clients.remove(self.cnh)
+        self.parent.all_bots.append(self.cnh)
+
     def change_nickname(self, whole : dict):
         old_username = self.sock_handler.username
         new_username = whole["other"]
@@ -204,7 +231,7 @@ class handler:
         help_string = "All commands:\n"
         for _, entry in self.all_commands.items():
             if(entry.get("description")):
-                help_string += f"{entry.get("usage")} : {entry['description']}\n"
+                help_string += f"{entry.get('usage')} : {entry['description']}\n"
         self.sock_handler.sock.sendall(f"[Server]: {help_string}".encode())
 
 
