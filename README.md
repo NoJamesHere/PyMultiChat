@@ -8,8 +8,8 @@ List of implementation ideas:
 - Rooms + Topics ✔
 - DM ✔
 - Username Collision Handling
-- Safe Disconnect 🔨
-
+- Safe Disconnect ✔
+- Chatbot support 🔨
 ---
 ## Rooms
 You can create rooms in two ways:
