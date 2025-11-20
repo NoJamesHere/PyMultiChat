@@ -51,28 +51,50 @@ class user_connection: # This class is used for every connection.
             if dead in self.parent.all_clients:
                 self.parent.all_clients.remove(dead)    
 
-    def update_values(self, whole):
-        index_current = self.parent.all_clients.index(self)
+    def update_values(self, whole : dict, bot = False):
+        index_current = self.parent.all_clients.index(self) if not bot else self.parent.all_bots.index(self)
         self.username = whole["username"]
         self.other = whole["other"]
         self.extra = whole["extra"]
         self.command = whole["command"]
         self.room = whole["room"]
+        if bot:
+            self.parent.all_bots[index_current] = self
+            return
         self.parent.all_clients[index_current] = self
 
+
+    
+    def disconnect_bot(self):
+        disconnect_message = f"[Server]: {self.username} has disconnected."
+
+        self.broadcast(disconnect_message, self.sock)
+        
+        try:
+            self.sock.close()
+        except:
+            pass
+
+        if(self in self.parent.all_bots):
+            self.parent.all_bots.remove(self)
 
     def listener(self):
         while self.running and self.parent.running:
             try:
                 data = self.sock.recv(5012).decode()
                 if not data:
-                    self.disconnect_current_client()
+                    if self in self.parent.all_bots:
+                        self.disconnect_bot()
+                    else:
+                        self.disconnect_current_client()
                     break
+                is_bot = self in self.parent.all_bots
+                
                 self.parent.debugprint(data)
                 message = json.loads(data)
                 self.parent.debugprint(message="1")
                 if message["command"]:
-                    self.update_values(message)
+                    self.update_values(whole=message, bot=is_bot)
                     reply = self.command_handler.give(message)
                     if reply:
                         self.sock.sendall(f"[Server]: {reply}".encode())

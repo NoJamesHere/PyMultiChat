@@ -21,7 +21,7 @@ class bot_connection:
     def extract_title(self):
         while True:
             try:
-                url, username = self.url_queue.get(timeout=5)
+                url, room = self.url_queue.get(timeout=5)
                 print("Trying to extract title")
                 if not(url.startswith("http")):
                     url = "https://" + url
@@ -32,9 +32,9 @@ class bot_connection:
                 start_index = title_index + len("<title>")
                 end_index = html.find("</title>")
                 title = html[start_index:end_index]
-                self.extra = f"[{self.username}] ^ {title}"
-                self.command = "SEND_URL_TITLE"
-                self.other = username
+                self.message = f"[{self.username}] ^ {title}"
+                self.room = room
+                self.command = None
                 self.send()
             except queue.Empty:
                 continue
@@ -70,21 +70,21 @@ class bot_connection:
                     breaker = message["message"].split(" ")
                     for word in breaker:
                         if(word.startswith("http") or word.startswith("www.")):
-                            self.url_queue.put((word, message.get("username")))
+                            self.url_queue.put((word, message.get("room")))
                     
                 
             except socket.timeout:
-                print("Timed out wtf.")
                 continue
             except Exception as e:
                 print(f"Error in listener: {e}")
                 continue
 
     def send(self):
-        print("sent bitch yasss")
         json_data = self.to_json()
         with self.send_lock:
             self.sock.sendall(json_data.encode())
+            print("sent bitch yasss")
+
 
     def start(self):
         self.sock.connect((self.ip, self.port))

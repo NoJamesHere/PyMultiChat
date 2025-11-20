@@ -106,19 +106,25 @@ class handler:
 
     
     def broadcast_url_title(self, whole : dict):
-        room_of_sender = whole["other"]
-        url_message = whole["extra"]
+        sender_username = whole["other"]
+        title_message = whole["extra"]
+        
+        sender_client = None
 
         for user in self.parent.all_clients:
-            if user.username == room_of_sender:
-                self.sock_handler.broadcast(url_message, user)
-                user.sock_handler.sock.sendall(url_message.encode())
+            if user.username == sender_username:
+                sender_client = user
                 break
+        if not sender_client:
+            return
+        self.sock_handler.broadcast(title_message, sender=sender_client.sock)
 
 
     def register_bot(self):
-        self.parent.all_clients.remove(self.cnh)
-        self.parent.all_bots.append(self.cnh)
+        if self.cnh in self.parent.all_clients:
+            self.parent.all_clients.remove(self.cnh)
+        if not self.cnh in self.parent.all_bots:
+            self.parent.all_bots.append(self.cnh)
         self.parent.debugprint(self.parent.all_bots)
 
     def change_nickname(self, whole : dict):
