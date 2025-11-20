@@ -1,4 +1,5 @@
-import socket, threading, json, requests
+import socket, threading, json, requests, queue
+from threading import Lock
 
 class bot_connection:
     def __init__(self, username : str, sock : socket.socket, ip_address : str, port : int, parent):
@@ -13,27 +14,33 @@ class bot_connection:
         self.ip = ip_address
         self.port = port
         self.parent = parent 
-    
-    def extract_title(self, url, whole):
-        try:
-            print("Trying to extract title")
-            if not(url.startswith("http")):
-                url = "https://" + url
-            headers = {"User-Agent": "Mozilla/5.0"}
-            resp = requests.get(url, headers=headers, timeout=5)
-            html = resp.text
-            title_index = html.find("<title>")
-            start_index = title_index + len("<title>")
-            end_index = html.find("</title>")
-            title = html[start_index:end_index]
-            self.extra = f"[{self.username}] ^ {title}"
-            self.command = "SEND_URL_TITLE"
-            self.other = whole["username"]
-            self.send()
-            return
-        except Exception as e:
-            print(e)
-            return
+        self.url_queue = queue.Queue()
+        self.send_lock = Lock()
+ 
+
+    def extract_title(self):
+        while True:
+            try:
+                url, username = self.url_queue.get(timeout=5)
+                print("Trying to extract title")
+                if not(url.startswith("http")):
+                    url = "https://" + url
+                headers = {"User-Agent": "Mozilla/5.0"}
+                resp = requests.get(url, headers=headers, timeout=5)
+                html = resp.text
+                title_index = html.find("<title>")
+                start_index = title_index + len("<title>")
+                end_index = html.find("</title>")
+                title = html[start_index:end_index]
+                self.extra = f"[{self.username}] ^ {title}"
+                self.command = "SEND_URL_TITLE"
+                self.other = username
+                self.send()
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(e)
+                return
 
     def to_json(self):
         self.current_dict = {
@@ -44,8 +51,9 @@ class bot_connection:
             "room": self.room,
             "command": self.command
         }
-
+        print(self.current_dict)
         return json.dumps(self.current_dict)
+    
 
 
     def listener(self):
@@ -62,17 +70,21 @@ class bot_connection:
                     breaker = message["message"].split(" ")
                     for word in breaker:
                         if(word.startswith("http") or word.startswith("www.")):
-                            threading.Thread(target=self.extract_title, daemon=True, args=(word,message)).start()
+                            self.url_queue.put((word, message.get("username")))
                     
                 
             except socket.timeout:
+                print("Timed out wtf.")
                 continue
             except Exception as e:
                 print(f"Error in listener: {e}")
                 continue
 
     def send(self):
-        self.sock.sendall(self.to_json().encode())
+        print("sent bitch yasss")
+        json_data = self.to_json()
+        with self.send_lock:
+            self.sock.sendall(json_data.encode())
 
     def start(self):
         self.sock.connect((self.ip, self.port))
@@ -80,3 +92,5 @@ class bot_connection:
         self.send()
         self.sock.settimeout(5.0)
         threading.Thread(target=self.listener, daemon=True).start()
+        threading.Thread(target=self.extract_title, daemon=True).start()
+

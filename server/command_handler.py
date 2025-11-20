@@ -2,7 +2,6 @@ import socket
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from main import everything
     from connection_handling import user_connection
 
 class handler:
@@ -120,6 +119,7 @@ class handler:
     def register_bot(self):
         self.parent.all_clients.remove(self.cnh)
         self.parent.all_bots.append(self.cnh)
+        self.parent.debugprint(self.parent.all_bots)
 
     def change_nickname(self, whole : dict):
         old_username = self.sock_handler.username

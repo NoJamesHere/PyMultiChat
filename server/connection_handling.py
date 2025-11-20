@@ -80,7 +80,7 @@ class user_connection: # This class is used for every connection.
                 self.parent.debugprint(message="2")
                 for bot in self.parent.all_bots:
                     try:
-                        bot.sock.sendall(message.encode())
+                        bot.sock.sendall(json.dumps(message).encode())
                         continue
                     except:
                         if bot in self.parent.all_bots:
